@@ -1,8 +1,10 @@
 import os
 import asyncio
 import logging
+from pathlib import Path
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from playwright.async_api import async_playwright
@@ -193,6 +195,19 @@ async def proxy_pix(request: PixRequest):
     if pix_url:
         return JSONResponse({'success': True, 'pixUrl': pix_url, 'redirectUrl': pix_url})
     return JSONResponse({'success': False, 'error': error or 'Erro ao gerar PIX', 'message': 'Tente novamente.'}, status_code=400)
+
+@app.get('/health')
+async def health():
+    return {"status": "ok"}
+
+@app.get('/')
+async def index():
+    return FileResponse(Path(__file__).parent / 'static' / 'index.html')
+
+# Montar arquivos estáticos (CSS, JS, imagens, etc.) DEPOIS das rotas
+static_dir = Path(__file__).parent / 'static'
+if static_dir.exists():
+    app.mount('/static', StaticFiles(directory=str(static_dir)), name='static')
 
 if __name__ == '__main__':
     import uvicorn
