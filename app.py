@@ -32,11 +32,12 @@ app.add_middleware(
 # O valor deve ser o link completo de checkout correspondente.
 # ============================================================
 SUBTOTAL_LINKS = {
-    # "89.90": "https://pay.meuservicomei.com.br/r/LINK_PARA_89_90",
-    # "109.90": "https://pay.meuservicomei.com.br/r/LINK_PARA_109_90",
-    # "149.90": "https://pay.meuservicomei.com.br/r/LINK_PARA_149_90",
-    # Adicione quantos valores precisar seguindo o padrão acima
+    "89.90": "https://pay.meuservicomei.com.br/r/a51L1PhTl58c6S86",
+    "109.90": "https://pay.meuservicomei.com.br/r/OUTRO_LINK_AQUI",
+    "149.90": "https://pay.meuservicomei.com.br/r/MAIS_UM_LINK",
+    # Adicione quantos precisar...
 }
+
 
 # Link padrão caso o subtotal não seja encontrado no mapeamento
 EXTERNAL_CHECKOUT_URL_DEFAULT = "https://pay.meuservicomei.com.br/r/a51L1PhTl58c6S86"
