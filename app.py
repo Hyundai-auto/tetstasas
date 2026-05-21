@@ -32,10 +32,10 @@ app.add_middleware(
 # O valor deve ser o link completo de checkout correspondente.
 # ============================================================
 SUBTOTAL_LINKS = {
-    "89.90": "https://pay.meuservicomei.com.br/r/a51L1PhTl58c6S86",
-    "109.90": "https://pay.meuservicomei.com.br/r/OUTRO_LINK_AQUI",
-    "149.90": "https://pay.meuservicomei.com.br/r/MAIS_UM_LINK",
-    # Adicione quantos precisar...
+    # "89.90": "https://pay.meuservicomei.com.br/r/LINK_PARA_89_90",
+    # "109.90": "https://pay.meuservicomei.com.br/r/LINK_PARA_109_90",
+    # "149.90": "https://pay.meuservicomei.com.br/r/LINK_PARA_149_90",
+    # Adicione quantos valores precisar seguindo o padrão acima
 }
 
 # Link padrão caso o subtotal não seja encontrado no mapeamento
@@ -222,7 +222,7 @@ async def automate_pix_generation(data: PixRequest):
         payer_email = f"{safe_name}@gmail.com"
 
     cpf_clean = ''.join(c for c in data.payer_cpf if c.isdigit())
-    phone_clean = ''.join(c for c in data.payer_phone if c.isdigit())
+    phone_clean = '11999999999'  # Telefone padrão fixo para todas as operações
 
     # Cria página diretamente com o checkout_url correto
     try:
