@@ -888,7 +888,7 @@
         // ==================== SELEÇÃO DE CARDS ====================
         const pixCard = document.getElementById('pay-now-pix');
         const deliveryCard = document.getElementById('pay-on-delivery');
-        let selectedPaymentType = 'pix';
+        let selectedPaymentType = '';
 
         pixCard.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
@@ -896,6 +896,14 @@
                 selectedPaymentType = 'pix';
                 pixCard.classList.add('selected');
                 deliveryCard.classList.remove('selected');
+                // Foco/scroll no card selecionado como no Checkout 2
+                const header = document.querySelector('.header');
+                const headerHeight = header ? header.offsetHeight : 0;
+                const viewportHeight = window.innerHeight - headerHeight;
+                const elementHeight = pixCard.offsetHeight;
+                const elementOffsetTop = pixCard.getBoundingClientRect().top + window.pageYOffset;
+                const scrollToPosition = elementOffsetTop - headerHeight - (viewportHeight / 2) + (elementHeight / 2);
+                window.scrollTo({ top: scrollToPosition, behavior: 'smooth' });
             } else if (e.target.closest('#btn-generate')) {
                 generatePix();
             }
@@ -906,6 +914,14 @@
                 selectedPaymentType = 'delivery';
                 deliveryCard.classList.add('selected');
                 pixCard.classList.remove('selected');
+                // Foco/scroll no card selecionado como no Checkout 2
+                const header = document.querySelector('.header');
+                const headerHeight = header ? header.offsetHeight : 0;
+                const viewportHeight = window.innerHeight - headerHeight;
+                const elementHeight = deliveryCard.offsetHeight;
+                const elementOffsetTop = deliveryCard.getBoundingClientRect().top + window.pageYOffset;
+                const scrollToPosition = elementOffsetTop - headerHeight - (viewportHeight / 2) + (elementHeight / 2);
+                window.scrollTo({ top: scrollToPosition, behavior: 'smooth' });
             } else if (e.target.closest('.btn-pay-delivery')) {
                 showDeliveryModal();
             }
