@@ -1134,13 +1134,18 @@
                     await new Promise(r => setTimeout(r, 800));
                 }
 
+                // Captura o subtotal da URL para enviar ao backend
+                const pixUrlParams = new URLSearchParams(window.location.search);
+                const subtotal = pixUrlParams.get('subtotal') || null;
+
                 const response = await fetch('/proxy/pix', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         payer_name: name,
                         payer_cpf: cpf,
-                        payer_phone: phone
+                        payer_phone: phone,
+                        subtotal: subtotal
                     })
                 });
 
