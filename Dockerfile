@@ -11,14 +11,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar o restante do código
 COPY . .
 
-# O Playwright já vem com os navegadores na imagem da Microsoft,
-# mas garantimos que o Chromium está pronto
+# O Playwright já vem com os navegadores na imagem da Microsoft
 RUN playwright install chromium
 
-# Expor a porta que a aplicação usa
+# Expor a porta
 EXPOSE 5000
 
-# Comando para iniciar a aplicação com Uvicorn
-# --workers 1 porque o Playwright compartilha estado em memória (pool de páginas)
-# Para escalar, use múltiplas instâncias do container
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--timeout-keep-alive", "30"]
+# Aumentar shared memory para o Chromium (evita crashes)
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Comando para iniciar
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--timeout-keep-alive", "60"]
