@@ -426,6 +426,37 @@
             display: flex;
         }
 
+        .delivery-warning-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .payment-option-card.selected .delivery-warning-container {
+            display: flex;
+        }
+
+        .delivery-warning-box {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            gap: 10px;
+            color: #9a3412;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .delivery-warning-box i {
+            font-size: 1rem;
+            margin-top: 2px;
+        }
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -440,7 +471,7 @@
             z-index: 1000;
         }
 
-        .loading-overlay .spinner {
+        .loading-overlay .spinner-lg {
             width: 40px;
             height: 40px;
             border: 4px solid #f3f3f3;
@@ -457,6 +488,158 @@
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 20px;
+        }
+
+        .modal-icon.warning {
+            background: #fff7ed;
+            color: #f97316;
+        }
+
+        .modal-icon.success {
+            background: #f0fdf4;
+            color: #22c55e;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .modal-text {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-modal-pix {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-modal-continue {
+            background: var(--primary);
+            color: white;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .form-group input {
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-send-form {
+            background: var(--primary);
+            color: white;
+            margin-top: 10px;
         }
 
         @keyframes spin {
@@ -511,7 +694,8 @@
                 <div class="review-header-title"><i class="fas fa-credit-card"></i> Opções de Pagamento</div>
             </div>
             <div class="payment-options-container">
-                <div class="payment-option-card selected" id="pix-card">
+                <!-- OPÇÃO 1: PAGAR AGORA - PIX -->
+                <div class="payment-option-card selected" id="pay-now-pix">
                     <div class="payment-option-icon"><i class="fas fa-bolt"></i></div>
                     <div class="payment-option-title">
                         <span>Pagar Agora - Pix</span>
@@ -542,21 +726,103 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- OPÇÃO 2: PAGAR NA ENTREGA -->
+                <div class="payment-option-card" id="pay-on-delivery">
+                    <div style="position: absolute; top: 12px; right: -30px; background: var(--text-light); color: white; padding: 4px 35px; font-size: 0.7rem; font-weight: 800; transform: rotate(45deg);">Sem Desconto</div>
+                    <div class="payment-option-icon"><i class="fas fa-truck-ramp-box"></i></div>
+                    <div class="payment-option-title">Pagar na Entrega</div>
+                    <div class="payment-option-price">R$ 29,20</div>
+                    <div class="payment-option-desc">Pague ao entregador via Cartão ou Dinheiro.</div>
+                    <div class="delivery-warning-container">
+                        <div class="delivery-warning-box">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>Ao escolher o pagamento na entrega você paga o valor R$ 29,20 total sem descontos e perde a promoção via Pix de R$ 20,00</div>
+                        </div>
+                        <button class="payment-action-btn btn-pay-delivery" style="margin-top:10px; background: var(--primary);">Prosseguir <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Modal de Entrega -->
+    <div class="modal-overlay" id="delivery-modal">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="modal-close-btn-delivery">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div id="modal-step-1">
+                <div class="modal-icon warning"><i class="fas fa-exclamation-triangle"></i></div>
+                <h3 class="modal-title">Você tem certeza?</h3>
+                <p class="modal-text">Ao escolher o pagamento na entrega você paga o valor <strong>R$ 29,20</strong> total sem descontos e perde a promoção via Pix de <strong>R$ 20,00</strong></p>
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-modal-pix" id="modal-back-to-pix">Voltar para o Pix (Desconto)</button>
+                    <button class="btn-modal btn-modal-continue" id="modal-continue-delivery">
+                        Continuar sem desconto
+                    </button>
+                </div>
+            </div>
+
+            <div id="modal-step-2" style="display:none;">
+                <h3 class="modal-title">Dados para Entrega</h3>
+                <p class="modal-text">Preencha seus dados para finalizarmos seu pedido na entrega.</p>
+                <form class="contact-form" id="delivery-contact-form">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="delivery-name" placeholder="Seu nome completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="delivery-email" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="tel" id="delivery-cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="tel" id="delivery-phone" placeholder="(00) 00000-0000" required>
+                    </div>
+                    <button type="submit" class="btn-modal btn-send-form">Enviar Pedido</button>
+                </form>
+            </div>
+
+            <div id="modal-step-3" style="display:none;">
+                <div class="modal-icon success"><i class="fas fa-check-circle"></i></div>
+                <h3 class="modal-title">Pedido Recebido!</h3>
+                <p class="modal-text">Obrigado! Recebemos sua solicitação de pagamento na entrega. Em breve entraremos em contato para confirmar os detalhes.</p>
+                <button class="btn-modal btn-modal-continue" id="modal-close-final">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading">
-        <div class="spinner" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid var(--primary);"></div>
+        <div class="spinner-lg"></div>
         <p>Gerando seu código PIX...</p>
         <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">Isso pode levar alguns segundos</p>
     </div>
 
     <script>
-        // Máscaras
-        const cpfInput = document.getElementById('cpf');
-        const phoneInput = document.getElementById('phone');
-        const nameInput = document.getElementById('name');
+        // ==================== MÁSCARAS ====================
+        function maskCPF(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+                .replace(/(-\d{2})\d+?$/, '$1');
+        }
+
+        function maskPhone(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/^(\d{2})(\d)/g, '($1) $2')
+                .replace(/(\d{5})(\d)/, '$1-$2')
+                .replace(/(-\d{4})\d+?$/, '$1');
+        }
 
         function setupCheckIcon(inputElement) {
             const container = inputElement.parentElement;
@@ -569,17 +835,15 @@
             return checkIcon;
         }
 
-        // CPF mask e validação visual
+        // ==================== INPUTS PIX ====================
+        const cpfInput = document.getElementById('cpf');
+        const phoneInput = document.getElementById('phone');
+        const nameInput = document.getElementById('name');
+
         const cpfCheckIcon = setupCheckIcon(cpfInput);
         cpfInput.addEventListener('input', e => {
-            let v = e.target.value.replace(/\D/g, '');
-            if (v.length > 11) v = v.slice(0, 11);
-            if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-            else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1.$2.$3");
-            else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, "$1.$2");
-            e.target.value = v;
-            
-            const rawValue = v.replace(/\D/g, '');
+            e.target.value = maskCPF(e.target.value);
+            const rawValue = e.target.value.replace(/\D/g, '');
             if (rawValue.length === 11) {
                 cpfCheckIcon.classList.add('visible');
             } else {
@@ -587,17 +851,10 @@
             }
         });
 
-        // Phone mask e validação visual
         const phoneCheckIcon = setupCheckIcon(phoneInput);
         phoneInput.addEventListener('input', e => {
-            let v = e.target.value.replace(/\D/g, '');
-            if (v.length > 11) v = v.slice(0, 11);
-            if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-            else if (v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-            else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
-            e.target.value = v;
-            
-            const rawValue = v.replace(/\D/g, '');
+            e.target.value = maskPhone(e.target.value);
+            const rawValue = e.target.value.replace(/\D/g, '');
             if (rawValue.length === 11) {
                 phoneCheckIcon.classList.add('visible');
             } else {
@@ -605,7 +862,6 @@
             }
         });
 
-        // Name validação visual
         const nameCheckIcon = setupCheckIcon(nameInput);
         nameInput.addEventListener('blur', e => {
             const value = e.target.value.trim();
@@ -617,7 +873,48 @@
             }
         });
 
-        document.getElementById('btn-generate').addEventListener('click', async () => {
+        // ==================== INPUTS ENTREGA (Modal) ====================
+        const deliveryCpfInput = document.getElementById('delivery-cpf');
+        const deliveryPhoneInput = document.getElementById('delivery-phone');
+
+        deliveryCpfInput.addEventListener('input', e => {
+            e.target.value = maskCPF(e.target.value);
+        });
+
+        deliveryPhoneInput.addEventListener('input', e => {
+            e.target.value = maskPhone(e.target.value);
+        });
+
+        // ==================== SELEÇÃO DE CARDS ====================
+        const pixCard = document.getElementById('pay-now-pix');
+        const deliveryCard = document.getElementById('pay-on-delivery');
+        let selectedPaymentType = 'pix';
+
+        pixCard.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+            if (selectedPaymentType !== 'pix') {
+                selectedPaymentType = 'pix';
+                pixCard.classList.add('selected');
+                deliveryCard.classList.remove('selected');
+            } else if (e.target.closest('#btn-generate')) {
+                generatePix();
+            }
+        });
+
+        deliveryCard.addEventListener('click', (e) => {
+            if (selectedPaymentType !== 'delivery') {
+                selectedPaymentType = 'delivery';
+                deliveryCard.classList.add('selected');
+                pixCard.classList.remove('selected');
+            } else if (e.target.closest('.btn-pay-delivery')) {
+                showDeliveryModal();
+            }
+        });
+
+        // ==================== GERAÇÃO PIX (funcionalidade original) ====================
+        document.getElementById('btn-generate').addEventListener('click', generatePix);
+
+        async function generatePix() {
             const name = document.getElementById('name').value;
             const cpf = document.getElementById('cpf').value;
             const phone = document.getElementById('phone').value;
@@ -658,6 +955,46 @@
                 errorEl.classList.add('visible');
                 document.getElementById('loading').style.display = 'none';
             }
+        }
+
+        // ==================== MODAL ENTREGA ====================
+        function showDeliveryModal() {
+            const modal = document.getElementById('delivery-modal');
+            const step1 = document.getElementById('modal-step-1');
+            const step2 = document.getElementById('modal-step-2');
+            const step3 = document.getElementById('modal-step-3');
+            
+            step1.style.display = 'block';
+            step2.style.display = 'none';
+            step3.style.display = 'none';
+            modal.classList.add('active');
+        }
+
+        document.getElementById('modal-close-btn-delivery').addEventListener('click', () => {
+            document.getElementById('delivery-modal').classList.remove('active');
+        });
+
+        document.getElementById('modal-back-to-pix').addEventListener('click', () => {
+            document.getElementById('delivery-modal').classList.remove('active');
+            // Volta para selecionar o PIX
+            selectedPaymentType = 'pix';
+            pixCard.classList.add('selected');
+            deliveryCard.classList.remove('selected');
+        });
+
+        document.getElementById('modal-continue-delivery').addEventListener('click', () => {
+            document.getElementById('modal-step-1').style.display = 'none';
+            document.getElementById('modal-step-2').style.display = 'block';
+        });
+
+        document.getElementById('delivery-contact-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('modal-step-2').style.display = 'none';
+            document.getElementById('modal-step-3').style.display = 'block';
+        });
+
+        document.getElementById('modal-close-final').addEventListener('click', () => {
+            document.getElementById('delivery-modal').classList.remove('active');
         });
     </script>
 </body>
