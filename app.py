@@ -33,7 +33,7 @@ EXTERNAL_BASE_URL = "https://pay.meuservicomei.com.br"
 # Exemplo: "89.90": "/r/a51L1PhTl58c6S86"
 # =============================================================================
 SUBTOTAL_LINKS = {
-    "89.90": "/r/SEU_LINK_AQUI_1",
+    "89.90": "/r/a51L1PhTl58c6S86",
     "109.90": "/r/SEU_LINK_AQUI_2",
     # Adicione mais valores conforme necessário:
     # "149.90": "/r/SEU_LINK_AQUI_3",
