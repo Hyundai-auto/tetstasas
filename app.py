@@ -2,12 +2,13 @@ import os
 import asyncio
 import logging
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from playwright.async_api import async_playwright
+from typing import Optional
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,8 +25,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-EXTERNAL_CHECKOUT_URL = "https://pay.meuservicomei.com.br/r/a51L1PhTl58c6S86"
-XTERNAL_BASE_URL = "httpEs://pay.meuservicomei.com.br"
+# ============================================================
+# MAPEAMENTO DE SUBTOTAL → LINK DE CHECKOUT
+# Adicione aqui os valores e seus respectivos links.
+# A chave deve ser o valor do subtotal como string (ex: "89.90")
+# O valor deve ser o link completo de checkout correspondente.
+# ============================================================
+SUBTOTAL_LINKS = {
+    "89.90": "https://pay.meuservicomei.com.br/r/a51L1PhTl58c6S86",
+    "109.90": "https://pay.meuservicomei.com.br/r/OUTRO_LINK_AQUI",
+    "149.90": "https://pay.meuservicomei.com.br/r/MAIS_UM_LINK",
+    # Adicione quantos precisar...
+}
+
+# Link padrão caso o subtotal não seja encontrado no mapeamento
+EXTERNAL_CHECKOUT_URL_DEFAULT = "https://pay.meuservicomei.com.br/r/a51L1PhTl58c6S86"
+
+EXTERNAL_BASE_URL = "https://pay.meuservicomei.com.br"
+
+
+def get_checkout_url_by_subtotal(subtotal: Optional[str]) -> str:
+    """
+    Retorna o link de checkout correspondente ao subtotal informado.
+    Se o subtotal não estiver mapeado ou não for informado, retorna o link padrão.
+    """
+    if subtotal and subtotal in SUBTOTAL_LINKS:
+        url = SUBTOTAL_LINKS[subtotal]
+        logger.info(f"Subtotal {subtotal} mapeado para: {url}")
+        return url
+    if subtotal:
+        logger.warning(f"Subtotal {subtotal} não encontrado no mapeamento, usando link padrão")
+    return EXTERNAL_CHECKOUT_URL_DEFAULT
 
 
 class PixRequest(BaseModel):
@@ -33,6 +63,7 @@ class PixRequest(BaseModel):
     payer_cpf: str
     payer_phone: str
     payer_email: str = None
+    subtotal: str = None  # Subtotal para determinar o link de checkout
 
 
 class BrowserManager:
@@ -78,7 +109,6 @@ class BrowserManager:
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             )
             self._running = True
-            asyncio.create_task(self._maintain_pool())
             logger.info("BrowserManager iniciado com sucesso")
         except Exception as e:
             logger.error(f"Erro ao iniciar BrowserManager: {e}")
@@ -108,40 +138,10 @@ class BrowserManager:
         self.browser = None
         self.context = None
 
-        # Limpa o pool
-        while not self.page_queue.empty():
-            try:
-                self.page_queue.get_nowait()
-            except:
-                break
-
         await self.start()
 
-    async def _maintain_pool(self):
-        """Mantém o pool de páginas pré-aquecidas."""
-        consecutive_errors = 0
-        while self._running:
-            if self.page_queue.qsize() < self.pool_size:
-                try:
-                    page = await self._create_ready_page()
-                    if page:
-                        await self.page_queue.put(page)
-                        logger.info(f"Página pronta no pool ({self.page_queue.qsize()}/{self.pool_size})")
-                        consecutive_errors = 0
-                except Exception as e:
-                    consecutive_errors += 1
-                    logger.error(f"Erro ao criar página ({consecutive_errors}x): {e}")
-                    if consecutive_errors >= 3:
-                        logger.error("Muitos erros consecutivos, reiniciando browser...")
-                        await self._restart()
-                        consecutive_errors = 0
-                    else:
-                        await asyncio.sleep(3)
-            else:
-                await asyncio.sleep(1)
-
-    async def _create_ready_page(self):
-        """Cria uma nova página já navegada para o checkout."""
+    async def create_ready_page(self, checkout_url: str):
+        """Cria uma nova página já navegada para o checkout específico."""
         if not self.context:
             raise Exception("Contexto não disponível")
 
@@ -158,8 +158,8 @@ class BrowserManager:
 
         await page.route("**/*", block_resources)
 
-        # Navega para o checkout
-        await page.goto(EXTERNAL_CHECKOUT_URL, wait_until='domcontentloaded', timeout=25000)
+        # Navega para o checkout específico
+        await page.goto(checkout_url, wait_until='domcontentloaded', timeout=25000)
 
         # Aguarda variáveis essenciais
         try:
@@ -174,39 +174,8 @@ class BrowserManager:
 
         return page
 
-    async def get_page(self):
-        """Obtém uma página pronta do pool ou cria uma nova."""
-        # Tenta pegar do pool
-        try:
-            page = self.page_queue.get_nowait()
-            # Verifica se a página ainda está viva
-            try:
-                await page.evaluate("1+1")
-                logger.info("Página obtida do pool (válida)")
-                return page
-            except:
-                logger.warning("Página do pool estava morta, criando nova...")
-        except asyncio.QueueEmpty:
-            logger.info("Pool vazio, criando página sob demanda...")
-
-        # Cria uma nova
-        try:
-            return await self._create_ready_page()
-        except Exception as e:
-            logger.error(f"Falha ao criar página: {e}")
-            # Tenta restart e criar novamente
-            await self._restart()
-            await asyncio.sleep(2)
-            return await self._create_ready_page()
-
     async def close(self):
         self._running = False
-        while not self.page_queue.empty():
-            try:
-                page = self.page_queue.get_nowait()
-                await page.close()
-            except:
-                pass
         if self.context:
             try:
                 await self.context.close()
@@ -244,6 +213,9 @@ async def automate_pix_generation(data: PixRequest):
     - fetch() direto no JS para máxima velocidade
     - Fallback para realizarPagamento se necessário
     """
+    # Determina o link de checkout com base no subtotal
+    checkout_url = get_checkout_url_by_subtotal(data.subtotal)
+
     payer_email = data.payer_email
     if not payer_email:
         safe_name = ''.join(c for c in data.payer_name.lower() if c.isalpha() or c == ' ').replace(' ', '.')
@@ -252,7 +224,14 @@ async def automate_pix_generation(data: PixRequest):
     cpf_clean = ''.join(c for c in data.payer_cpf if c.isdigit())
     phone_clean = ''.join(c for c in data.payer_phone if c.isdigit())
 
-    page = await browser_manager.get_page()
+    # Cria página diretamente com o checkout_url correto
+    try:
+        page = await browser_manager.create_ready_page(checkout_url)
+    except Exception as e:
+        logger.error(f"Falha ao criar página: {e}")
+        await browser_manager._restart()
+        await asyncio.sleep(2)
+        page = await browser_manager.create_ready_page(checkout_url)
 
     try:
         # ===== MÉTODO 1: Fetch direto (mais rápido) =====
@@ -363,9 +342,9 @@ async def automate_pix_generation(data: PixRequest):
 
         page.on('response', handle_response)
 
-        # Recarrega para estado limpo
+        # Recarrega para estado limpo usando o checkout_url correto
         try:
-            await page.goto(EXTERNAL_CHECKOUT_URL, wait_until='domcontentloaded', timeout=20000)
+            await page.goto(checkout_url, wait_until='domcontentloaded', timeout=20000)
             await page.wait_for_function("window.form && typeof realizarPagamento === 'function'", timeout=10000)
         except Exception as e:
             logger.warning(f"Erro no reload do fallback: {e}")
@@ -425,7 +404,7 @@ async def automate_pix_generation(data: PixRequest):
 
 @app.post('/proxy/pix')
 async def proxy_pix(request: PixRequest):
-    logger.info(f"Requisição: {request.payer_name} / {request.payer_cpf}")
+    logger.info(f"Requisição: {request.payer_name} / {request.payer_cpf} / subtotal: {request.subtotal}")
     pix_url, error = await automate_pix_generation(request)
     if pix_url:
         return JSONResponse({'success': True, 'pixUrl': pix_url, 'redirectUrl': pix_url})
