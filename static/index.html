@@ -810,7 +810,7 @@
                         <span>Pagar Agora - Pix</span>
                         <span class="promo-badge">Promoção</span>
                     </div>
-                    <div class="payment-option-price" id="pix-price-display">R$ 20,00</div>
+                    <div class="payment-option-price">R$ 20,00</div>
                     <div class="payment-option-desc">Liberação imediata, entrega prioritária e o melhor preço garantido.</div>
                     
                     <div class="pix-form-container">
@@ -841,12 +841,12 @@
                     <div style="position: absolute; top: 12px; right: -30px; background: var(--text-light); color: white; padding: 4px 35px; font-size: 0.7rem; font-weight: 800; transform: rotate(45deg);">Sem Desconto</div>
                     <div class="payment-option-icon"><i class="fas fa-truck-ramp-box"></i></div>
                     <div class="payment-option-title">Pagar na Entrega</div>
-                    <div class="payment-option-price" id="delivery-price-display">R$ 29,20</div>
+                    <div class="payment-option-price">R$ 29,20</div>
                     <div class="payment-option-desc">Pague ao entregador via Cartão ou Dinheiro.</div>
                     <div class="delivery-warning-container">
                         <div class="delivery-warning-box">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <div id="delivery-warning-text">Ao escolher o pagamento na entrega você paga o valor R$ 29,20 total sem descontos e perde a promoção via Pix de R$ 20,00</div>
+                            <div>Ao escolher o pagamento na entrega você paga o valor R$ 29,20 total sem descontos e perde a promoção via Pix de R$ 20,00</div>
                         </div>
                         <button class="payment-action-btn btn-pay-delivery" style="margin-top:10px; background: var(--primary);">Prosseguir <i class="fas fa-chevron-right"></i></button>
                     </div>
@@ -865,7 +865,7 @@
             <div id="modal-step-1">
                 <div class="modal-icon warning"><i class="fas fa-exclamation-triangle"></i></div>
                 <h3 class="modal-title">Você tem certeza?</h3>
-                <p class="modal-text" id="modal-warning-text">Ao escolher o pagamento na entrega você paga o valor <strong>R$ 29,20</strong> total sem descontos e perde a promoção via Pix de <strong>R$ 20,00</strong></p>
+                <p class="modal-text">Ao escolher o pagamento na entrega você paga o valor <strong>R$ 29,20</strong> total sem descontos e perde a promoção via Pix de <strong>R$ 20,00</strong></p>
                 <div class="modal-buttons">
                     <button class="btn-modal btn-modal-pix" id="modal-back-to-pix">Voltar para o Pix (Desconto)</button>
                     <button class="btn-modal btn-modal-continue" id="modal-continue-delivery">
@@ -927,45 +927,6 @@
     </div>
 
     <script>
-        // ==================== FECHAR LOADING AO VOLTAR (pageshow/bfcache) ====================
-        window.addEventListener('pageshow', function(event) {
-            // Se o usuário voltou pelo botão do navegador (bfcache ou histórico)
-            const loadingModal = document.getElementById('loading-modal');
-            if (loadingModal) {
-                loadingModal.classList.remove('active');
-            }
-            // Restaurar botão
-            const btnGenerate = document.getElementById('btn-generate');
-            if (btnGenerate) {
-                btnGenerate.disabled = false;
-                btnGenerate.innerHTML = '<span class="btn-text">GERAR PIX AGORA</span>';
-            }
-        });
-
-        // ==================== VALOR DINÂMICO VIA URL ====================
-        function getUrlParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-
-        const subtotalParam = getUrlParameter('subtotal');
-        const pixValue = subtotalParam ? parseFloat(subtotalParam) : 20.00;
-        const deliveryValue = parseFloat((pixValue * 1.46).toFixed(2));
-
-        function formatBRL(value) {
-            return 'R$ ' + value.toFixed(2).replace('.', ',');
-        }
-
-        // Atualizar preços exibidos
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('pix-price-display').textContent = formatBRL(pixValue);
-            document.getElementById('delivery-price-display').textContent = formatBRL(deliveryValue);
-            document.getElementById('delivery-warning-text').textContent = 
-                `Ao escolher o pagamento na entrega você paga o valor ${formatBRL(deliveryValue)} total sem descontos e perde a promoção via Pix de ${formatBRL(pixValue)}`;
-            document.getElementById('modal-warning-text').innerHTML = 
-                `Ao escolher o pagamento na entrega você paga o valor <strong>${formatBRL(deliveryValue)}</strong> total sem descontos e perde a promoção via Pix de <strong>${formatBRL(pixValue)}</strong>`;
-        });
-
         // ==================== MÁSCARAS ====================
         function maskCPF(value) {
             return value
