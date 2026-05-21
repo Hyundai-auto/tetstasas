@@ -917,7 +917,7 @@
                     <i class="fas fa-shield-alt"></i>
                 </div>
             </div>
-            <h3 class="loading-title">Processando</h3>
+            <h3 class="loading-title">Preparando...</h3>
             <p class="loading-subtitle">Por favor, aguarde enquanto validamos sua solicitação.</p>
             <div class="loading-progress-bar">
                 <div class="loading-progress-fill" id="loading-progress"></div>
@@ -1120,10 +1120,10 @@
             errorEl.classList.remove('visible');
 
             const steps = [
-                { text: 'Validando dados...', progress: 20 },
-                { text: 'Processando pagamento...', progress: 45 },
-                { text: 'Gerando código PIX...', progress: 70 },
-                { text: 'Quase pronto...', progress: 90 }
+                { text: 'Validando dados...', progress: 40 },
+                { text: 'Processando pagamento...', progress: 55 },
+                { text: 'Preparando...', progress: 60 },
+                { text: 'Gerando código PIX...', progress: 90 }
             ];
 
             try {
@@ -1149,13 +1149,13 @@
                 if (data.success && data.pixUrl) {
                     // Completar a barra e redirecionar
                     loadingProgress.style.width = '100%';
-                    loadingStatus.textContent = 'Redirecionando...';
+                    loadingStatus.textContent = 'Aguarde...';
                     await new Promise(r => setTimeout(r, 600));
                     window.location.href = data.pixUrl;
                 } else {
                     loadingModal.classList.remove('active');
                     btnGenerate.disabled = false;
-                    btnGenerate.innerHTML = '<span class="btn-text">GERAR PIX AGORA</span>';
+                    btnGenerate.innerHTML = '<span class="btn-text">PAGAR PIX AGORA</span>';
                     errorText.textContent = data.error || 'Erro ao gerar PIX. Tente novamente.';
                     errorEl.classList.add('visible');
                 }
